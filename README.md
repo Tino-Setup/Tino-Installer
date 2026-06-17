@@ -68,8 +68,6 @@ The graphical wizard will guide you through the rest.
 
 Pull requests and Issues are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-**[Github](https://github.com/Tino-Setup/Tino-Wizard)**
-
 ### 📄 License
 
 **[GNU GPL 3.0](https://www.gnu.org/licenses/gpl-3.0.en.html)**
