@@ -34,7 +34,7 @@ def decompress(archive_path, target_dir, compression_type, callback=None):
                 abs_member = os.path.realpath(member_path)
                 if not abs_member.startswith(abs_target + os.sep) and abs_member != abs_target:
                     raise RuntimeError(f"Blocked path traversal attempt: {member.name}")
-                tar.extract(member, path=target_dir)
+                tar.extract(member, path=target_dir, filter='data')
                 if callback:
                     callback(i + 1, total_files, member.name)
                     

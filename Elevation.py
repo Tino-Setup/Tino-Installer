@@ -1,7 +1,6 @@
 import sys
 import os
 import pwd
-import shlex
 from elevate import elevate
 
 def is_root():
@@ -67,17 +66,6 @@ def check_and_elevate(project_path=None):
 
         elevate()
 
-def drop_privileges_cmd(cmd):
-    """
-    Modifies a command list to drop privileges to the original user 
-    if the app is running as root and an original user is detected.
-    """
-    if is_root():
-        orig_user = get_original_user()
-        if orig_user:
-            return ["su", orig_user, "-c", shlex.join(cmd)]
-    return cmd
-
 def fix_ownership(path):
     """
     Recursively changes ownership of the given path back to the original user
@@ -97,7 +85,7 @@ def fix_ownership(path):
     try:
         parent_stat = os.stat(parent_dir)
         if parent_stat.st_uid == 0:
-            return  # Parent is root-owned, so root ownership is expected for children
+            return
             
         user_info = pwd.getpwnam(orig_user)
         uid = user_info.pw_uid
@@ -105,14 +93,14 @@ def fix_ownership(path):
         
         if os.path.isdir(path):
             for root_dir, dirs, files in os.walk(path):
-                os.chown(root_dir, uid, gid)
+                os.chown(root_dir, uid, gid, follow_symlinks=False)
                 for item in dirs + files:
                     try:
-                        os.chown(os.path.join(root_dir, item), uid, gid)
+                        os.chown(os.path.join(root_dir, item), uid, gid, follow_symlinks=False)
                     except OSError:
                         pass
         else:
             if os.path.exists(path):
-                os.chown(path, uid, gid)
+                os.chown(path, uid, gid, follow_symlinks=False)
     except Exception:
         pass

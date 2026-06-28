@@ -81,7 +81,7 @@ class InstallationEngine:
         ext_map = {"lzma": ".tar.xz", "gzip": ".tar.gz", "bz2": ".tar.bz2"}
         expected_ext = ext_map.get(self.data.application_compression_type, ".tar.xz")
 
-        app_name_slug = self.data.local.application_name.replace(" ", "_")
+        app_name_slug = self.data.application_name_slug or self.data.local.application_name.replace(" ", "_")
         candidate3_base = f"{app_name_slug}-{self.data.application_version}"
 
         def search_dir(d):
@@ -145,11 +145,12 @@ class InstallationEngine:
                 (_("Removing icon symlink..."), lambda path=p: self._safe_remove(path))
             )
 
-        if self.data.application_desktop_path and self.data.application_desktop_source:
-            p = os.path.join(self.data.application_desktop_path, self.data.application_desktop_source)
-            cleanup_tasks.append(
-                (_("Removing desktop file..."), lambda path=p: self._safe_remove(path))
-            )
+        if self.data.application_desktop_path:
+            if self.data.application_desktop_source:
+                p = os.path.join(self.data.application_desktop_path, self.data.application_desktop_source)
+                cleanup_tasks.append(
+                    (_("Removing desktop file..."), lambda path=p: self._safe_remove(path))
+                )
             u_desktop = os.path.join(self.data.application_desktop_path, f"{self.data.application_name_slug}-uninstaller.desktop")
             cleanup_tasks.append(
                 (_("Removing uninstaller desktop file..."), lambda path=u_desktop: self._safe_remove(path))
@@ -224,7 +225,6 @@ class InstallationEngine:
                 self._create_language_file(target_dir)
 
             if self._running:
-                # Fix ownership of all created paths if running as root
                 if is_root():
                     fix_ownership(target_dir)
                     if self.data.application_executable_path:
@@ -233,8 +233,9 @@ class InstallationEngine:
                         uninst_bin = os.path.join(self.data.application_executable_path, f"{self.data.application_name_slug}-uninstaller")
                         fix_ownership(uninst_bin)
                     if self.data.application_desktop_path:
-                        desktop_file = os.path.join(self.data.application_desktop_path, self.data.application_desktop_source)
-                        fix_ownership(desktop_file)
+                        if self.data.application_desktop_source:
+                            desktop_file = os.path.join(self.data.application_desktop_path, self.data.application_desktop_source)
+                            fix_ownership(desktop_file)
                         u_desktop = os.path.join(self.data.application_desktop_path, f"{self.data.application_name_slug}-uninstaller.desktop")
                         fix_ownership(u_desktop)
                     if self.data.application_icon_path and self.data.application_icon_source:
